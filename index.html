@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Scripture Reference for Counseling Youth</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f0eb;
+            color: #2c2c2c;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: #3a2d23;
+            color: #f5f0eb;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .header-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: #fff;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 12px 16px;
+            background: #f8f5f1;
+            border-bottom: 1px solid #e5ddd5;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 0.95rem;
+            color: #5a4a3a;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d5cdc5;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            background: #fff;
+        }
+
+        .search-box:focus {
+            border-color: #8b6f4e;
+            box-shadow: 0 0 0 2px rgba(139,111,78,0.15);
+        }
+
+        .topic-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+
+        .topic-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0ebe5;
+            transition: background 0.15s;
+            gap: 10px;
+        }
+
+        .topic-item:hover {
+            background: #f8f5f1;
+        }
+
+        .topic-item.active {
+            background: #ede5da;
+            border-left: 3px solid #8b6f4e;
+        }
+
+        .topic-item.unavailable {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .topic-item.unavailable:hover {
+            background: transparent;
+        }
+
+        .topic-name {
+            flex: 1;
+            font-size: 0.92rem;
+        }
+
+        .topic-page {
+            font-size: 0.78rem;
+            color: #999;
+            flex-shrink: 0;
+        }
+
+        .topic-item.unavailable .topic-page {
+            color: #c99;
+            font-style: italic;
+        }
+
+        /* PDF Viewer */
+        .viewer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #e8e0d8;
+        }
+
+        .viewer iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .viewer-placeholder {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            color: #8b7b6b;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .viewer-placeholder .icon {
+            font-size: 3rem;
+        }
+
+        .viewer-placeholder p {
+            font-size: 1.05rem;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* Mobile toggle */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3a2d23;
+            color: #f5f0eb;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        /* Category dividers */
+        .category-divider {
+            padding: 6px 16px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #a09080;
+            background: #f8f5f1;
+            border-bottom: 1px solid #ede5da;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                z-index: 50;
+                transform: translateX(-100%);
+                box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 49;
+            }
+
+            .sidebar-overlay.visible {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-icon">&#x1F4D6;</div>
+        <div>
+            <h1>Quick Scripture Reference for Counseling Youth</h1>
+            <p>Keith R. Miller &amp; Patricia A. Miller</p>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Subject Guide</h2>
+                <input type="text" class="search-box" id="searchBox" placeholder="Search topics...">
+            </div>
+            <div class="topic-list" id="topicList"></div>
+        </div>
+        <div class="sidebar-overlay" id="overlay"></div>
+        <div class="viewer" id="viewer">
+            <div class="viewer-placeholder" id="placeholder">
+                <div class="icon">&#x1F4D6;</div>
+                <p>Select a topic from the Subject Guide to jump directly to that section in the book.</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
+
+    <script>
+        const PDF_FILE = 'Counselling_Youth.pdf';
+
+        const topics = [
+            { name: 'The Gospel', page: 10, note: 'Starting point for all counseling' },
+            { name: 'Introduction', page: 7 },
+            { divider: 'A' },
+            { name: 'Abortion', page: 13 },
+            { name: 'Abuse', page: 18 },
+            { name: 'Adoption', page: 23 },
+            { name: 'Adversity', page: 282, note: 'See Suffering/Adversity' },
+            { name: 'Anger', page: 26 },
+            { name: 'Art', page: 89, note: 'See Entertainment' },
+            { name: 'Attitude', page: 29, note: 'See Attitude/Mind' },
+            { name: 'Authority', page: 33, note: 'See Authority/Rebellion/Submission' },
+            { divider: 'B' },
+            { name: 'Bitterness', page: 36 },
+            { name: 'Boundaries', page: 38, note: 'See Boundaries/Limits' },
+            { name: 'Bullies', page: 119, note: 'See Gangs/Bullies' },
+            { divider: 'C' },
+            { name: 'Career', page: 43 },
+            { name: 'Cheating', page: 274, note: 'See Stealing/Cheating' },
+            { name: 'Choices', page: 46, note: 'See Choices/Decision Making' },
+            { name: 'Church Life', page: 53 },
+            { name: 'Clothes', page: 56 },
+            { name: 'Compassion', page: 60 },
+            { name: 'Complaining', page: 62, note: 'See Complaining/Critical Spirit' },
+            { name: 'Confession', page: 65, note: 'See Confession/Repentance' },
+            { name: 'Contentment', page: 67 },
+            { name: 'Critical Spirit', page: 62, note: 'See Complaining/Critical Spirit' },
+            { divider: 'D' },
+            { name: 'Dating', page: 70 },
+            { name: 'Death', page: 72 },
+            { name: 'Decision Making', page: 46, note: 'See Choices/Decision Making' },
+            { name: 'Depression', page: 77 },
+            { name: 'Disappointment', page: 80 },
+            { name: 'Disease', page: 191, note: 'See Natural Disasters/Disease' },
+            { name: 'Divorced Parents', page: 83 },
+            { divider: 'E' },
+            { name: 'Eating Struggles', page: 86 },
+            { name: 'Employment', page: 308, note: 'See Work Ethic/Employment' },
+            { name: 'Entertainment', page: 89 },
+            { name: 'Envy', page: null, note: 'Missing from PDF export' },
+            { name: 'Exercise', page: 271, note: 'See Sports/Exercise' },
+            { divider: 'F' },
+            { name: 'Facebook', page: null, note: 'Missing from PDF export' },
+            { name: 'Failure', page: 94, note: 'See Failure/Success' },
+            { name: 'Faith', page: 298, note: 'See Trust/Faith' },
+            { name: 'Fantasizing', page: 294, note: 'See Thought Life/Fantasizing' },
+            { name: 'Fear', page: 97, note: 'See Fear/Safety/Terrorism' },
+            { name: 'Fighting', page: 101, note: 'See Fighting/Violence' },
+            { name: 'Flirting', page: 104 },
+            { name: 'Forgiveness from God', page: 107 },
+            { name: 'Forgiving Others', page: 109 },
+            { name: 'Friends', page: 112 },
+            { name: 'Future Plans', page: 114 },
+            { divider: 'G' },
+            { name: 'Gambling', page: 117 },
+            { name: 'Gaming', page: 89, note: 'See Entertainment' },
+            { name: 'Gangs', page: 119 },
+            { name: "God's Will", page: 46, note: 'See Choices/Decision Making' },
+            { name: 'Gossip', page: 305, note: 'See Words That Hurt/Gossip' },
+            { name: 'Grief', page: 123 },
+            { name: 'Growing Up', page: 215, note: 'See Puberty/Growing Up' },
+            { name: 'Guilt', page: 125 },
+            { divider: 'H' },
+            { name: 'Health', page: 128, note: 'See Health/Illness' },
+            { name: 'Heroes', page: 132 },
+            { name: 'Homosexuality', page: 135 },
+            { name: 'Hope', page: 140 },
+            { name: 'Humility', page: 208, note: 'See Pride/Humility' },
+            { divider: 'I' },
+            { name: 'Illness', page: 128, note: 'See Health/Illness' },
+            { name: 'Incest', page: null, note: 'Missing from PDF export' },
+            { name: 'Integrity', page: null, note: 'Missing from PDF export' },
+            { name: 'Internet', page: null, note: 'Missing from PDF export' },
+            { divider: 'J' },
+            { name: 'Jealousy', page: null, note: 'Missing from PDF export' },
+            { divider: 'L' },
+            { name: 'Laziness', page: null, note: 'Missing from PDF export' },
+            { name: 'Limits', page: 38, note: 'See Boundaries/Limits' },
+            { name: 'Loneliness', page: null, note: 'Missing from PDF export' },
+            { name: 'Lust', page: null, note: 'Missing from PDF export' },
+            { name: 'Lying', page: null, note: 'Missing from PDF export' },
+            { divider: 'M' },
+            { name: 'Manipulation', page: null, note: 'Missing from PDF export' },
+            { name: 'Marriage', page: null, note: 'Missing from PDF export' },
+            { name: 'Masturbation', page: null, note: 'Missing from PDF export' },
+            { name: 'Materialism', page: null, note: 'Missing from PDF export' },
+            { name: 'Mind', page: 29, note: 'See Attitude/Mind' },
+            { name: 'Money', page: null, note: 'Missing from PDF export' },
+            { name: 'Movies', page: 89, note: 'See Entertainment' },
+            { name: 'Moving', page: null, note: 'Missing from PDF export' },
+            { name: 'Music', page: 89, note: 'See Entertainment' },
+            { divider: 'N' },
+            { name: 'Natural Disasters', page: 191 },
+            { name: 'New Residence', page: null, note: 'Missing from PDF export' },
+            { divider: 'O' },
+            { name: 'Orphan', page: 193 },
+            { divider: 'P' },
+            { name: 'Parents', page: 196 },
+            { name: 'Past Memories', page: 200 },
+            { name: 'Peer Pressure', page: 203 },
+            { name: 'Pornography', page: 205 },
+            { name: 'Pride', page: 208, note: 'See Pride/Humility' },
+            { name: 'Profanity', page: 211 },
+            { name: 'Prostitution', page: 213 },
+            { name: 'Puberty', page: 215 },
+            { name: 'Purpose for Living', page: 217 },
+            { divider: 'Q' },
+            { name: 'Quiet Time', page: 260, note: 'See Spiritual Disciplines' },
+            { divider: 'R' },
+            { name: 'Rape', page: 221 },
+            { name: 'Rebellion', page: 33, note: 'See Authority/Rebellion/Submission' },
+            { name: 'Repentance', page: 65, note: 'See Confession/Repentance' },
+            { name: 'Rumors', page: 305, note: 'See Words That Hurt/Gossip' },
+            { name: 'Runaways', page: 223 },
+            { divider: 'S' },
+            { name: 'Safety', page: 97, note: 'See Fear/Safety/Terrorism' },
+            { name: 'Self-Control', page: 226 },
+            { name: 'Self-Injury', page: 229 },
+            { name: 'Selfishness', page: 232 },
+            { name: 'Self-Worth', page: 235 },
+            { name: 'Sexual Purity', page: 238 },
+            { name: 'Sibling Rivalry', page: 242 },
+            { name: 'Singleness', page: 245 },
+            { name: 'Sleep Struggles', page: 248 },
+            { name: 'Special Needs', page: 252 },
+            { name: 'Speech', page: 255 },
+            { name: 'Spiritual Disciplines', page: 260 },
+            { name: 'Spiritual Gifts', page: 265 },
+            { name: 'Spiritual Warfare', page: 267 },
+            { name: 'Sports', page: 271 },
+            { name: 'Stealing', page: 274 },
+            { name: 'Subjectivity', page: 232, note: 'See Selfishness/Subjectivity' },
+            { name: 'Submission', page: 33, note: 'See Authority/Rebellion/Submission' },
+            { name: 'Substance Abuse', page: 276 },
+            { name: 'Success', page: 94, note: 'See Failure/Success' },
+            { name: 'Suffering', page: 282 },
+            { name: 'Suicide', page: 286 },
+            { divider: 'T' },
+            { name: 'Temptation', page: 290 },
+            { name: 'Terrorism', page: 97, note: 'See Fear/Safety/Terrorism' },
+            { name: 'Thought Life', page: 294 },
+            { name: 'Time Management', page: 297 },
+            { name: 'Trust', page: 298 },
+            { name: 'Truthfulness', page: null, note: 'Missing from PDF export' },
+            { name: 'TV', page: 89, note: 'See Entertainment' },
+            { divider: 'U' },
+            { name: 'Unwed Pregnancy', page: 302 },
+            { divider: 'V' },
+            { name: 'Violence', page: 101, note: 'See Fighting/Violence' },
+            { divider: 'W' },
+            { name: 'Words That Hurt', page: 305 },
+            { name: 'Work Ethic', page: 308 },
+            { name: 'Worry', page: 311 },
+        ];
+
+        const topicList = document.getElementById('topicList');
+        const searchBox = document.getElementById('searchBox');
+        const viewer = document.getElementById('viewer');
+        const placeholder = document.getElementById('placeholder');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const toggle = document.getElementById('sidebarToggle');
+        let activeItem = null;
+
+        function renderTopics(filter = '') {
+            topicList.innerHTML = '';
+            const filterLower = filter.toLowerCase();
+
+            topics.forEach((item, idx) => {
+                if (item.divider) {
+                    if (!filter) {
+                        const div = document.createElement('div');
+                        div.className = 'category-divider';
+                        div.textContent = item.divider;
+                        topicList.appendChild(div);
+                    }
+                    return;
+                }
+
+                if (filter && !item.name.toLowerCase().includes(filterLower)) return;
+
+                const el = document.createElement('div');
+                el.className = 'topic-item' + (item.page === null ? ' unavailable' : '');
+                el.dataset.idx = idx;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'topic-name';
+                nameSpan.textContent = item.name;
+
+                const pageSpan = document.createElement('span');
+                pageSpan.className = 'topic-page';
+                if (item.page === null) {
+                    pageSpan.textContent = 'N/A';
+                    el.title = item.note || 'Not available in this PDF export';
+                } else {
+                    pageSpan.textContent = 'p. ' + item.page;
+                    if (item.note) el.title = item.note;
+                }
+
+                el.appendChild(nameSpan);
+                el.appendChild(pageSpan);
+
+                if (item.page !== null) {
+                    el.addEventListener('click', () => navigateToTopic(item, el));
+                }
+
+                topicList.appendChild(el);
+            });
+        }
+
+        function navigateToTopic(item, el) {
+            if (activeItem) activeItem.classList.remove('active');
+            el.classList.add('active');
+            activeItem = el;
+
+            viewer.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.src = PDF_FILE + '#page=' + item.page;
+            iframe.title = item.name;
+            viewer.appendChild(iframe);
+
+            // Close sidebar on mobile
+            sidebar.classList.remove('open');
+            overlay.classList.remove('visible');
+        }
+
+        // Search
+        searchBox.addEventListener('input', (e) => {
+            renderTopics(e.target.value.trim());
+        });
+
+        // Mobile sidebar toggle
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('visible');
+        });
+
+        // Initial render
+        renderTopics();
+    </script>
+</body>
+</html>
