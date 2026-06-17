@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quick Scripture Reference for Counseling Youth</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs" type="module"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -12,34 +13,37 @@
             background: #f5f0eb;
             color: #2c2c2c;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         header {
             background: #3a2d23;
             color: #f5f0eb;
-            padding: 16px 24px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             flex-shrink: 0;
+            z-index: 10;
         }
 
         header h1 {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
             font-weight: 600;
             letter-spacing: 0.02em;
         }
 
         header p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             opacity: 0.8;
         }
 
         .header-icon {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             flex-shrink: 0;
         }
 
@@ -47,6 +51,7 @@
             display: flex;
             flex: 1;
             overflow: hidden;
+            position: relative;
         }
 
         /* Sidebar */
@@ -57,20 +62,20 @@
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
-            transition: transform 0.3s ease;
         }
 
         .sidebar-header {
-            padding: 12px 16px;
+            padding: 10px 14px;
             background: #f8f5f1;
             border-bottom: 1px solid #e5ddd5;
             display: flex;
             flex-direction: column;
             gap: 8px;
+            flex-shrink: 0;
         }
 
         .sidebar-header h2 {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             color: #5a4a3a;
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -81,7 +86,7 @@
             padding: 8px 12px;
             border: 1px solid #d5cdc5;
             border-radius: 6px;
-            font-size: 0.9rem;
+            font-size: 16px; /* prevents iOS zoom on focus */
             outline: none;
             background: #fff;
         }
@@ -94,21 +99,27 @@
         .topic-list {
             flex: 1;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             padding: 4px 0;
         }
 
         .topic-item {
             display: flex;
             align-items: center;
-            padding: 10px 16px;
+            padding: 12px 16px;
             cursor: pointer;
             border-bottom: 1px solid #f0ebe5;
             transition: background 0.15s;
             gap: 10px;
+            -webkit-tap-highlight-color: rgba(139,111,78,0.15);
         }
 
         .topic-item:hover {
             background: #f8f5f1;
+        }
+
+        .topic-item:active {
+            background: #ede5da;
         }
 
         .topic-item.active {
@@ -121,7 +132,8 @@
             cursor: default;
         }
 
-        .topic-item.unavailable:hover {
+        .topic-item.unavailable:hover,
+        .topic-item.unavailable:active {
             background: transparent;
         }
 
@@ -146,14 +158,100 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #e8e0d8;
+            background: #4a4a4a;
+            position: relative;
         }
 
-        .viewer iframe {
+        .viewer-toolbar {
+            display: none;
+            background: #3a3a3a;
+            color: #eee;
+            padding: 8px 12px;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        .viewer-toolbar.visible {
+            display: flex;
+        }
+
+        .viewer-toolbar .back-btn {
+            background: none;
+            border: 1px solid #777;
+            color: #eee;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .viewer-toolbar .back-btn:active {
+            background: #555;
+        }
+
+        .viewer-toolbar .topic-title {
             flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .viewer-toolbar .page-nav {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .viewer-toolbar .page-nav button {
+            background: none;
+            border: 1px solid #777;
+            color: #eee;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewer-toolbar .page-nav button:active {
+            background: #555;
+        }
+
+        .viewer-toolbar .page-nav button:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .viewer-toolbar .page-info {
+            min-width: 60px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .pdf-container {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .pdf-container canvas {
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            background: #fff;
         }
 
         .viewer-placeholder {
@@ -166,6 +264,7 @@
             color: #8b7b6b;
             padding: 40px;
             text-align: center;
+            background: #e8e0d8;
         }
 
         .viewer-placeholder .icon {
@@ -173,27 +272,33 @@
         }
 
         .viewer-placeholder p {
-            font-size: 1.05rem;
+            font-size: 1rem;
             max-width: 400px;
             line-height: 1.6;
         }
 
-        /* Mobile toggle */
-        .sidebar-toggle {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: #ccc;
+            font-size: 0.95rem;
+            gap: 10px;
+        }
+
+        .loading-spinner::before {
+            content: '';
+            width: 24px;
+            height: 24px;
+            border: 3px solid #666;
+            border-top-color: #ccc;
             border-radius: 50%;
-            background: #3a2d23;
-            color: #f5f0eb;
-            border: none;
-            font-size: 1.4rem;
-            cursor: pointer;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.3);
-            z-index: 100;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Category dividers */
@@ -211,35 +316,39 @@
             z-index: 1;
         }
 
+        /* Desktop: side-by-side layout */
+        @media (min-width: 769px) {
+            .viewer-toolbar .back-btn {
+                display: none;
+            }
+        }
+
+        /* Mobile: stacked views */
         @media (max-width: 768px) {
             .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                z-index: 50;
-                transform: translateX(-100%);
-                box-shadow: 4px 0 20px rgba(0,0,0,0.2);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .sidebar-toggle {
-                display: block;
-            }
-
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
+                width: 100%;
+                position: absolute;
                 inset: 0;
-                background: rgba(0,0,0,0.4);
-                z-index: 49;
+                z-index: 5;
+                transition: transform 0.25s ease;
             }
 
-            .sidebar-overlay.visible {
+            .sidebar.hidden {
+                transform: translateX(-100%);
+            }
+
+            .viewer {
+                position: absolute;
+                inset: 0;
+                z-index: 4;
+            }
+
+            .viewer-toolbar .back-btn {
                 display: block;
+            }
+
+            header h1 {
+                font-size: 1rem;
             }
         }
     </style>
@@ -261,19 +370,27 @@
             </div>
             <div class="topic-list" id="topicList"></div>
         </div>
-        <div class="sidebar-overlay" id="overlay"></div>
         <div class="viewer" id="viewer">
+            <div class="viewer-toolbar" id="toolbar">
+                <button class="back-btn" id="backBtn">&#8592; Topics</button>
+                <span class="topic-title" id="topicTitle"></span>
+                <div class="page-nav">
+                    <button id="prevPage">&#8249;</button>
+                    <span class="page-info" id="pageInfo"></span>
+                    <button id="nextPage">&#8250;</button>
+                </div>
+            </div>
             <div class="viewer-placeholder" id="placeholder">
                 <div class="icon">&#x1F4D6;</div>
                 <p>Select a topic from the Subject Guide to jump directly to that section in the book.</p>
             </div>
+            <div class="pdf-container" id="pdfContainer" style="display:none;"></div>
         </div>
     </div>
 
-    <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
-
-    <script>
+    <script type="module">
         const PDF_FILE = 'Counselling_Youth.pdf';
+        const WORKER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.mjs';
 
         const topics = [
             { name: 'The Gospel', page: 10, note: 'Starting point for all counseling' },
@@ -430,15 +547,119 @@
             { name: 'Worry', page: 311 },
         ];
 
+        // DOM refs
         const topicList = document.getElementById('topicList');
         const searchBox = document.getElementById('searchBox');
         const viewer = document.getElementById('viewer');
-        const placeholder = document.getElementById('placeholder');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        const toggle = document.getElementById('sidebarToggle');
-        let activeItem = null;
+        const placeholderEl = document.getElementById('placeholder');
+        const pdfContainer = document.getElementById('pdfContainer');
+        const toolbar = document.getElementById('toolbar');
+        const backBtn = document.getElementById('backBtn');
+        const topicTitle = document.getElementById('topicTitle');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const sidebarEl = document.getElementById('sidebar');
 
+        let activeItem = null;
+        let pdfDoc = null;
+        let currentPage = 1;
+        let totalPages = 0;
+        let rendering = false;
+        const PAGES_TO_RENDER = 5; // render a batch of pages from the starting point
+
+        // Load PDF.js
+        const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_SRC;
+
+        // Load the PDF document once
+        let pdfLoadPromise = null;
+        async function getPdfDoc() {
+            if (pdfDoc) return pdfDoc;
+            if (!pdfLoadPromise) {
+                pdfLoadPromise = pdfjsLib.getDocument(PDF_FILE).promise;
+            }
+            pdfDoc = await pdfLoadPromise;
+            totalPages = pdfDoc.numPages;
+            return pdfDoc;
+        }
+
+        async function renderPages(startPage, count) {
+            if (rendering) return;
+            rendering = true;
+
+            pdfContainer.innerHTML = '';
+            pdfContainer.style.display = 'flex';
+            placeholderEl.style.display = 'none';
+
+            // Show loading
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'loading-spinner';
+            loadingEl.textContent = 'Loading...';
+            pdfContainer.appendChild(loadingEl);
+
+            try {
+                const doc = await getPdfDoc();
+                pdfContainer.innerHTML = '';
+
+                const end = Math.min(startPage + count - 1, doc.numPages);
+                currentPage = startPage;
+                updatePageNav();
+
+                const containerWidth = pdfContainer.clientWidth - 16;
+
+                for (let p = startPage; p <= end; p++) {
+                    const page = await doc.getPage(p);
+                    const viewport = page.getViewport({ scale: 1 });
+                    const scale = Math.min(containerWidth / viewport.width, 2.5);
+                    const scaledViewport = page.getViewport({ scale });
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = scaledViewport.width;
+                    canvas.height = scaledViewport.height;
+
+                    const ctx = canvas.getContext('2d');
+                    await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+
+                    pdfContainer.appendChild(canvas);
+                }
+            } catch (err) {
+                pdfContainer.innerHTML = '<div class="loading-spinner" style="animation:none">Failed to load PDF. Please try again.</div>';
+                console.error(err);
+            }
+
+            rendering = false;
+        }
+
+        function updatePageNav() {
+            const end = Math.min(currentPage + PAGES_TO_RENDER - 1, totalPages);
+            pageInfo.textContent = currentPage + '-' + end + ' / ' + totalPages;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage + PAGES_TO_RENDER > totalPages;
+        }
+
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        function showViewer(topicName) {
+            toolbar.classList.add('visible');
+            topicTitle.textContent = topicName;
+            if (isMobile()) {
+                sidebarEl.classList.add('hidden');
+            }
+        }
+
+        function showSidebar() {
+            sidebarEl.classList.remove('hidden');
+            if (isMobile()) {
+                toolbar.classList.remove('visible');
+                pdfContainer.style.display = 'none';
+                placeholderEl.style.display = 'flex';
+            }
+        }
+
+        // Render topic list
         function renderTopics(filter = '') {
             topicList.innerHTML = '';
             const filterLower = filter.toLowerCase();
@@ -478,44 +699,41 @@
                 el.appendChild(pageSpan);
 
                 if (item.page !== null) {
-                    el.addEventListener('click', () => navigateToTopic(item, el));
+                    el.addEventListener('click', () => {
+                        if (activeItem) activeItem.classList.remove('active');
+                        el.classList.add('active');
+                        activeItem = el;
+
+                        showViewer(item.name);
+                        renderPages(item.page, PAGES_TO_RENDER);
+                    });
                 }
 
                 topicList.appendChild(el);
             });
         }
 
-        function navigateToTopic(item, el) {
-            if (activeItem) activeItem.classList.remove('active');
-            el.classList.add('active');
-            activeItem = el;
-
-            viewer.innerHTML = '';
-            const iframe = document.createElement('iframe');
-            iframe.src = PDF_FILE + '#page=' + item.page;
-            iframe.title = item.name;
-            viewer.appendChild(iframe);
-
-            // Close sidebar on mobile
-            sidebar.classList.remove('open');
-            overlay.classList.remove('visible');
-        }
-
-        // Search
+        // Event listeners
         searchBox.addEventListener('input', (e) => {
             renderTopics(e.target.value.trim());
         });
 
-        // Mobile sidebar toggle
-        toggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('visible');
+        backBtn.addEventListener('click', showSidebar);
+
+        prevPageBtn.addEventListener('click', () => {
+            const newPage = Math.max(1, currentPage - PAGES_TO_RENDER);
+            renderPages(newPage, PAGES_TO_RENDER);
         });
 
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('visible');
+        nextPageBtn.addEventListener('click', () => {
+            const newPage = currentPage + PAGES_TO_RENDER;
+            if (newPage <= totalPages) {
+                renderPages(newPage, PAGES_TO_RENDER);
+            }
         });
+
+        // Start pre-loading the PDF in the background
+        getPdfDoc();
 
         // Initial render
         renderTopics();
